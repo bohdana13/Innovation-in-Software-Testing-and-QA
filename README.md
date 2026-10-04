@@ -1,142 +1,264 @@
 
-## Code Review — Issues in the Original Code
+## Code Review  
 
-### 1. Incorrect naming of getter and setter methods
+### 1. All logic is located inside `main()`
 
-The methods `takeA()`, `takeB()`, `takeC()` and `putA()`, `putB()`, `putC()` do not follow common Java naming conventions.
+The entire application logic is implemented inside one method.
 
-The standard `get...()` and `set...()` naming convention should be used instead.
+The method is responsible for file reading, text processing, word counting, sorting, output, and performance measurement.
 
-### 2. Empty constructor
+This makes the code difficult to understand, test, and maintain.
 
-The class contains an empty constructor that allows an object to be created without specifying its sides:
+### 2. `main()` has too many responsibilities
+
+The `main()` method performs several unrelated tasks.
+
+The functionality should be divided into separate methods responsible for specific operations.
+
+### 3. Hard-coded file path
+
+The path to the input file is directly written in the code:
 
 ```java
-new Triangle();
+Paths.get("src/txt/harry.txt")
 ```
 
-As a result, all sides are initialized to `0`, which does not represent a valid triangle.
+This makes the application dependent on a specific project structure.
 
-### 3. No validation of side lengths
+The path should be stored in a constant or provided as a program argument.
 
-The original implementation does not check whether the provided side lengths are positive or whether they can form a valid triangle.
+### 4. Unused variable
 
-For example:
+The variable:
 
 ```java
-new Triangle(1, 2, 10);
+int size = content.length();
 ```
 
-creates an invalid triangle.
+is never used after initialization.
 
-### 4. Setters can break object validity
+It should be removed.
 
-The `putA()`, `putB()` and `putC()` methods allow the sides of an existing triangle to be changed to invalid values.
+### 5. Hard-coded number of output results
 
-This can cause an object that was initially valid to become an invalid triangle.
-
-### 5. Fields are not immutable
-
-The fields `a`, `b` and `c` can be declared as `final` because the side lengths are provided when the object is created and do not need to be changed afterwards.
-
-### 6. Poor method name `perim()`
-
-The abbreviated name `perim()` makes the method less descriptive.
-
-A name such as `getPerimeter()` is clearer and easier to understand.
-
-### 7. Multiple calls to `perim()` in `area()`
-
-The original `area()` method calls `perim()` several times while calculating the area.
-
-It is better to calculate the semiperimeter once and reuse the result.
-
-### 8. Unnecessary `if-else` statement in `equilateral()`
-
-The original implementation contains:
+The value:
 
 ```java
-if (a == b && b == c) {
-    return true;
-} else {
-    return false;
+30
+```
+
+is used directly in the output loop.
+
+This is a magic number and should be replaced with a named constant such as `TOP_WORDS_COUNT`.
+
+### 6. Poor variable naming
+
+Some variable names are too short or do not clearly describe their purpose:
+
+```java
+content
+size
+freq
+```
+
+More descriptive names improve code readability.
+
+### 7. Using a `String` to store unique words
+
+The program uses:
+
+```java
+String distinctString = " ";
+```
+
+as a data structure for storing unique words.
+
+A `Set<String>` or `Map<String, Integer>` is much more appropriate for this purpose.
+
+### 8. Inefficient string concatenation
+
+The following operation is performed repeatedly:
+
+```java
+distinctString += words[i] + " ";
+```
+
+Since `String` objects are immutable in Java, repeated concatenation creates many temporary objects.
+
+A collection or `StringBuilder` should be used instead.
+
+### 9. Incorrect data structure for checking unique words
+
+The code uses:
+
+```java
+distinctString.contains(words[i])
+```
+
+The `contains()` method searches for a substring rather than a complete word.
+
+For example, one word can be a substring of another word.
+
+A `Set<String>` should be used when checking whether a complete word already exists.
+
+### 10. Inefficient frequency calculation
+
+The original implementation uses nested loops:
+
+```java
+for (int i = 0; i < distincts.length; i++) {
+    for (int j = 0; j < words.length; j++) {
+        ...
+    }
 }
 ```
 
-This can be simplified to:
+This causes the entire words array to be scanned for every distinct word.
+
+The frequency can be calculated in a single pass using a `Map<String, Integer>`.
+
+### 11. Incorrect data structure for word frequencies
+
+The actual problem is to store a relationship between a word and the number of times it occurs.
+
+This is naturally represented by:
 
 ```java
-return a == b && b == c;
+Map<String, Integer>
 ```
 
-### 9. Direct comparison of `double` values
+The original implementation instead uses separate arrays and strings.
 
-The `equilateral()` method uses the `==` operator to compare values of type `double`.
+### 12. Repeated processing of the same data
 
-For floating-point calculations, it is safer to consider a small acceptable error.
+The program first identifies distinct words and then performs another full scan of the original words to calculate their frequencies.
 
-### 10. No validation of `NaN` and infinite values
+The frequency can be calculated when each word is processed, avoiding unnecessary iterations.
 
-The class allows values such as `Double.NaN` and `Double.POSITIVE_INFINITY` to be passed as side lengths.
+### 13. Unnecessary creation of the `distincts` array
 
-Such values should not be accepted as valid triangle sides.
-
-### 11. No documentation for public methods
-
-The public constructors and methods do not have JavaDoc documentation.
-
-Adding documentation would make the class easier to understand and use.
-
-### 12. The class is not protected from inheritance
-
-If inheritance is not intended for the `Triangle` class, it can be declared as `final`.
-
-This clearly indicates that the class is not designed to be extended.
-
-### 13. No automated tests
-
-A mathematical class should have tests for its main functionality.
-
-At minimum, tests should cover the perimeter, area, equilateral triangle check, invalid side lengths, `equals()` and `hashCode()`.
-
-### 14. Area calculation is difficult to read
-
-The original implementation calculates the area using one long expression:
+The following array exists only because the unique words were first stored in a string:
 
 ```java
-Math.sqrt(0.5 * perim() * ...)
+String[] distincts = distinctString.split(" ");
 ```
 
-Using a separate variable for the semiperimeter makes the implementation of Heron's formula easier to understand.
+With a `Map<String, Integer>`, this intermediate structure is unnecessary.
 
-### 15. Object encapsulation can be improved
+### 14. Mixing words and frequencies into a single string
 
-The side lengths define the state of a triangle. Allowing them to be changed after object creation can lead to an invalid state.
+The code modifies every element using:
 
-Therefore, the class can be made immutable by removing setters and making its fields `final`.
+```java
+distincts[i] += " " + freq[i];
+```
+
+This produces strings such as:
+
+```text
+harry 150
+```
+
+The word and its frequency should remain separate pieces of data.
+
+### 15. Regular expression used to extract numbers
+
+The sorting code contains:
+
+```java
+str.replaceAll("[^0-9]", "")
+```
+
+This is necessary only because the word and its frequency were combined into one string.
+
+With `Map.Entry<String, Integer>`, the frequency can be accessed directly.
+
+### 16. Complex sorting expression
+
+The following expression is difficult to read and understand:
+
+```java
+Arrays.sort(
+    distincts,
+    Comparator.comparing(str ->
+        Integer.valueOf(str.replaceAll("[^0-9]", ""))
+    )
+);
+```
+
+The code becomes much simpler when sorting `Map.Entry` objects by their integer value.
+
+### 17. Unnecessary comments containing data sizes
+
+Comments such as:
+
+```java
+// 400 000
+```
+
+and:
+
+```java
+// 5 000
+```
+
+do not explain the code or its purpose.
+
+If performance characteristics are important, they should be documented separately or measured using benchmarks.
+
+### 18. Error handling is delegated to the caller
+
+The program uses:
+
+```java
+throws IOException
+```
+
+without providing a user-friendly error message.
+
+The exception should be handled and an understandable error message should be displayed.
+
+### 19. `LocalDateTime` is used for measuring execution time
+
+`LocalDateTime` represents calendar date and time.
+
+For measuring elapsed execution time, `System.nanoTime()` is more appropriate.
+
+### 20. Performance measurement is mixed with application logic
+
+The timing logic is located directly inside the main algorithm.
+
+It should be separated from the actual text-processing logic as much as possible.
+
+### 21. Lack of automated tests
+
+The original structure makes testing difficult because all operations are inside `main()`.
+
+Extracting individual methods makes it possible to test file processing, word counting, and sorting separately.
 
 ## Refactoring Performed
 
-The following changes were made during the refactoring:
+The following changes were made:
 
-- renamed methods to follow standard Java naming conventions;
-- removed the empty constructor;
-- added validation of side lengths;
-- added validation of the triangle inequality;
-- made the `a`, `b` and `c` fields `final`;
-- removed setter methods;
-- renamed `perim()` to `getPerimeter()`;
-- renamed `area()` to `getArea()`;
-- renamed `equilateral()` to `isEquilateral()`;
-- simplified the equilateral triangle check;
-- improved the area calculation by storing the semiperimeter in a separate variable;
-- added validation for `NaN` and infinite values;
-- declared the class as `final`;
-- improved the readability and structure of the code;
-- added the possibility of testing the main functionality.
+- divided the program into smaller methods with separate responsibilities;
+- introduced constants for configuration values;
+- replaced the hard-coded magic number `30` with `TOP_WORDS_COUNT`;
+- removed the unused `size` variable;
+- improved variable and method names;
+- replaced string-based storage of unique words with `Map<String, Integer>`;
+- removed unnecessary arrays;
+- replaced nested loops used for frequency calculation with a single-pass `HashMap` approach;
+- removed unnecessary string concatenation;
+- removed the need for regular expressions when extracting frequencies;
+- simplified sorting using `Map.Entry`;
+- improved exception handling;
+- replaced `LocalDateTime` with `System.nanoTime()` for execution-time measurement;
+- separated file reading, word counting, and result printing into different methods;
+- improved the overall readability and maintainability of the code.
 
 ## Result
 
-After the refactoring, the class has a clearer interface, protects its internal state from invalid modifications, and does not allow objects that do not represent valid triangles to be created.
+After refactoring, the program has a simpler structure and uses data structures that better represent the problem domain.
 
-The main functionality of the original class has been preserved: the user can obtain the side lengths, calculate the perimeter and area, and check whether the triangle is equilateral.
+The main improvement is the replacement of the nested-loop frequency calculation with a `Map<String, Integer>`. Each word is processed once while its frequency is accumulated.
+
