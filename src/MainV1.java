@@ -1,23 +1,32 @@
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Locale;
 
-public class Main {
+/**
+ * V1 - the original version (the algorithm is unchanged).
+ * Only the measurements and the file path taken from the command-line argument were added.
+ */
+public class MainV1 {
 
     public static void main(String[] args) throws IOException {
+        String file = args.length > 0 ? args[0] : "src/txt/harry.txt";
+        long t0 = System.nanoTime();
+        long a0 = Metrics.allocatedBytes();
 
-        LocalDateTime start = LocalDateTime.now();
+        for (String line : run(args.length > 0 ? args[0] : "src/txt/harry.txt")) {
+            System.out.println(line);
+        }
 
+        Metrics.report("V1 - original", file, t0, a0);
+    }
+
+    public static String[] run(String path) throws IOException {
         String content = new String(
-                Files.readAllBytes(Paths.get("src/txt/harry.txt"))
+                Files.readAllBytes(Paths.get(path))
         );
-
-        int size = content.length();
 
         content = content
                 .replaceAll("[^A-Za-z ]", " ")
@@ -63,17 +72,10 @@ public class Main {
                 )
         );
 
+        String[] top = new String[30];
         for (int i = 0; i < 30; i++) {
-            System.out.println(
-                    distincts[distincts.length - 1 - i]
-            );
+            top[i] = distincts[distincts.length - 1 - i];
         }
-
-        LocalDateTime finish = LocalDateTime.now();
-
-        System.out.println("------");
-        System.out.println(
-                ChronoUnit.MILLIS.between(start, finish)
-        );
+        return top;
     }
 }
