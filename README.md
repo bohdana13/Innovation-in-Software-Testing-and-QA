@@ -21,11 +21,11 @@ Memory now depends on the number of unique words, not on the file size.
 
 Each version prints its own report after the top-30 list. "Memory" is the total amount allocated during the run, not peak heap usage.
 
-| Version | Time | Allocated memory | Faster than V1 | Less memory than V1 |
-|---|---:|---:|---:|---:|
-| V1 (original) | 1737 ms | 181.16 MB | - | - |
-| V2 (HashMap) | 182 ms | 9.96 MB | 9.5x | 18x |
-| V3 (memory optimization) | 36 ms | 0.61 MB | 48x | ~298x |
+| Version |    Time | Allocated memory | Faster than V1 | Less memory than V1 |
+|---|--------:|-----------------:|---:|---:|
+| V1 (original) | 1957 ms |        181.27 MB | - | - |
+| V2 (HashMap) |  192 ms |          9.96 MB | 9.5x | 18x |
+| V3 (memory optimization) |   50 ms |          0.61 MB | 48x | ~298x |
 
 V3 vs V2: 5x faster, 16x less memory.
 
