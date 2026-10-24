@@ -19,7 +19,7 @@ public final class Metrics {
         System.out.println("============== " + version + " ==============");
         System.out.println("File:               " + file);
         System.out.println("Execution time:      " + ms + " мс");
-        System.out.printf("Memory:   %.2f МБ (%d KB)%n", allocKb / 1024.0, allocKb);
+        System.out.printf("Memory allocated:   %.2f МБ (%d KB)%n", allocKb / 1024.0, allocKb);
         System.out.println("=====================================");
     }
 }
